@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,12 +25,10 @@ namespace CraveCrafter7000
             if (Payment(item.Price))
             {
                 inventory.AddItem(item);
-                Console.WriteLine($"{name} purchased {item.Name}!");
                 return true;
             }
             else
             {
-                Console.WriteLine($"{name} Not able to purchase {item.Name}!");
                 return false;
             }
         }
@@ -48,7 +47,6 @@ namespace CraveCrafter7000
             }
             else
             {
-                Console.WriteLine($"{name} had insufficient founds, get rich bro!");
                 return false;
             }
         }
@@ -64,7 +62,10 @@ namespace CraveCrafter7000
         }
         public void CheckInventory()
         {
-            Console.WriteLine($"{name}'s current iventory is:");
+            Console.BackgroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine($"{name}'s current inventory is:");
+            Console.ResetColor();
             inventory.CheckInventory();
         }
 
@@ -75,7 +76,11 @@ namespace CraveCrafter7000
 
         public void CheckBalance()
         {
+
+            Console.BackgroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = ConsoleColor.Black;
             Console.WriteLine($"{name}'s current balance is:");
+            Console.ResetColor();
             wallet.CheckBalance();
         }
     }
@@ -176,9 +181,11 @@ namespace CraveCrafter7000
     
     internal class Program
     {
+
         public static void Main(string[] args)
         {
-            User Karo = new User("Karo", 100);
+
+            User Karo = new User("Your", 100);
             User VendingMachine = new User("CraveCrafter7000", 0);
 
             VendingMachine.Restock(new Item("Nocco", 20, quantity: 15));
@@ -194,28 +201,63 @@ namespace CraveCrafter7000
             VendingMachine.Restock(new Item("Almonds", 10, quantity:30));
             VendingMachine.Restock(new Item("Sandwich", 25, quantity: 10));
             VendingMachine.Restock(new Item("Licorice", 20, quantity: 20));
-
-
-           Dictionary<string, Item> inventory = VendingMachine.GetInventory();
-            int menuItem = 0;
+            
             int currentIndex = 0;
+            Item selectedItem = null;
+            Item latestPurchase = null;
+            bool error = false;
 
+            Dictionary<string, Item> inventory = VendingMachine.GetInventory();
             ConsoleKey key;
-            do {
+            do
+            {
+
                 Console.Clear();
-                Console.WriteLine("Please navigate to your option and press Enter to select:\n");
+                Console.WriteLine("WELCOME TO CraveCarfter 7000 - Satisfy your cravings with us!");
+
+                Karo.CheckInventory();
+                Karo.CheckBalance();
+
+                if (latestPurchase != null && !error)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    String message = $"| You purchased {latestPurchase.Name} |";
+                    String dashes = new string('-', message.Length-2);
+                    Console.WriteLine($"\n*{dashes}*");
+                    Console.WriteLine(message);
+                    Console.WriteLine($"*{dashes}*");
+                }
+
+                if (error)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    String message = $"|   You didnt have enough money to purchase {latestPurchase.Name} =(   |";
+                    String dashes = new string('-', message.Length - 2);
+                    Console.WriteLine($"\n*{dashes}*");
+                    Console.WriteLine(message);
+                    Console.WriteLine($"*{dashes}*");
+                }
+
+                Console.ResetColor();
+
+                Console.WriteLine("\n\nPlease navigate to your option and press Enter to purchase:\n--------------");
+                int menuItem = 0;
 
                 foreach (KeyValuePair<string, Item> item in inventory)
                 {
-                    menuItem++;
                     if (menuItem == currentIndex)
                     {
                         Console.BackgroundColor = ConsoleColor.Gray;
                         Console.ForegroundColor = ConsoleColor.Black;
+                        selectedItem = new Item(item.Value.Name, item.Value.Price);
+                        
                     }
-                    Console.WriteLine($"Product: {item.Value.Name}, Amount: {item.Value.Quantity}");
+                    
+                    Console.WriteLine($"Product: {item.Value.Name}, Price: {item.Value.Price}, Amount: {item.Value.Quantity}");
                     Console.ResetColor();
+                    menuItem++;
                 }
+
                 key = Console.ReadKey(true).Key;
                 switch (key)
                 {
@@ -226,49 +268,23 @@ namespace CraveCrafter7000
                         currentIndex = (currentIndex + 1) % inventory.Count;
                         break;
                 }
-            } while (key != ConsoleKey.Enter);
+                if (key == ConsoleKey.Enter)
+                {
+                    if (Karo.Purchase(selectedItem)) { 
+                        VendingMachine.RemoveFromInventory(selectedItem);
+                        latestPurchase = selectedItem;
+                        error = false; 
+                    } 
+                    else 
+                    { 
+                        error = true; 
+                        latestPurchase = selectedItem; 
+                    };
+                    
+                }               
 
-            Console.Clear();
-            Console.WriteLine($"You have selected: {currentIndex}");*/
+            } while (true); // (key != ConsoleKey.Enter);
            
-           string[] options = { "Option 1", "Option 2", "Option 3", "Option 4" }; // This should be our inventory
-           int currentIndex = 0;
-
-           ConsoleKey key;
-           do
-           {
-               Console.Clear();
-               Console.WriteLine("Please navigate to your option and press Enter to select:\n");
-
-               for (int i = 0; i < options.Length; i++) // here we do foreach instead and loop thorugh our invientory
-               {
-                   if (i == currentIndex)
-                   {
-                       Console.BackgroundColor = ConsoleColor.Gray;
-                       Console.ForegroundColor = ConsoleColor.Black;
-                   }
-
-                   Console.WriteLine(options[i]); // Here we write our inventory 
-                   Console.ResetColor();
-               }
-
-               key = Console.ReadKey(true).Key;
-
-               switch (key)
-               {
-                   case ConsoleKey.UpArrow:
-                       currentIndex = (currentIndex > 0) ? currentIndex - 1 : options.Length - 1;
-                       break;
-                   case ConsoleKey.DownArrow:
-                       currentIndex = (currentIndex + 1) % options.Length;
-                       break;
-               }
-           }
-           while (key != ConsoleKey.Enter);
-
-           Console.Clear();
-           Console.WriteLine($"You have selected: {options[currentIndex]}");
-
         }
     }
 }
